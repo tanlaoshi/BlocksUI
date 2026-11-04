@@ -23,6 +23,7 @@ int main(int ArgumentCount, char **ArgumentVector) {
     BlocksUIDocumentInitialize(&Widgets.Document);
     BlocksUIHistoryInitialize(&Widgets.History);
     Widgets.DisplayScale = 0.72;
+    Widgets.Language = BLOCKS_UI_LANGUAGE_CHINESE;
     Application = gtk_application_new("com.blocks.blocksui", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(Application, "activate", G_CALLBACK(BlocksUIGuiOnActivate),
                      &Widgets);

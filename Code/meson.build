@@ -33,6 +33,7 @@ executable(
     'Gui/FileActions.c',
     'Gui/Icon.c',
     'Gui/PageHint.c',
+    'Gui/Locale.c',
   ),
   include_directories: gui_inc,
   dependencies: [blocksui_model_dep, gtk4_dep],

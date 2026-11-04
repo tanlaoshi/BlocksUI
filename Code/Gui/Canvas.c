@@ -13,6 +13,42 @@ static void BlocksUIGuiCanvasMapPoint(BlocksUIGuiWidgets *Widgets, double EventX
     *OutY = (int)(EventY / Scale);
 }
 
+void BlocksUIGuiCanvasPlaceKind(BlocksUIGuiWidgets *Widgets, BlocksUIWidgetKind Kind,
+                                int LogicX, int LogicY) {
+    if (Widgets == 0) {
+        return;
+    }
+    BlocksUIGuiPushUndo(Widgets);
+    BlocksUIDocumentAddWidget(
+        &Widgets->Document, Kind, BlocksUISnapToGrid(LogicX, BLOCKS_UI_GRID_SIZE),
+        BlocksUISnapToGrid(LogicY, BLOCKS_UI_GRID_SIZE));
+    Widgets->Document.HasPendingPlace = 0;
+    BlocksUIGuiRefreshHistoryStatus(Widgets);
+    BlocksUIGuiRefreshPropertyPanel(Widgets);
+    BlocksUIGuiRefreshCanvas(Widgets);
+}
+
+static gboolean BlocksUIGuiCanvasOnDrop(GtkDropTarget *Target, const GValue *Value,
+                                        double X, double Y, gpointer UserData) {
+    BlocksUIGuiWidgets *Widgets = (BlocksUIGuiWidgets *)UserData;
+    const char *KindName;
+    int LogicX;
+    int LogicY;
+
+    (void)Target;
+    if (!G_VALUE_HOLDS_STRING(Value)) {
+        return FALSE;
+    }
+    KindName = g_value_get_string(Value);
+    if (KindName == 0 || KindName[0] == 0) {
+        return FALSE;
+    }
+    BlocksUIGuiCanvasMapPoint(Widgets, X, Y, &LogicX, &LogicY);
+    BlocksUIGuiCanvasPlaceKind(Widgets, BlocksUIWidgetKindFromName(KindName), LogicX,
+                               LogicY);
+    return TRUE;
+}
+
 static void BlocksUIGuiCanvasDrawWidget(cairo_t *Cairo, const BlocksUIWidget *Widget,
                                         int Selected) {
     double X = Widget->X;
@@ -110,14 +146,8 @@ static void BlocksUIGuiCanvasOnPressed(GtkGestureClick *Gesture, int NPress,
     gtk_widget_grab_focus(GTK_WIDGET(Widgets->Canvas));
     BlocksUIGuiCanvasMapPoint(Widgets, X, Y, &LogicX, &LogicY);
     if (Widgets->Document.HasPendingPlace) {
-        BlocksUIGuiPushUndo(Widgets);
-        BlocksUIDocumentAddWidget(
-            &Widgets->Document, Widgets->Document.PendingKind,
-            BlocksUISnapToGrid(LogicX, BLOCKS_UI_GRID_SIZE),
-            BlocksUISnapToGrid(LogicY, BLOCKS_UI_GRID_SIZE));
-        BlocksUIGuiRefreshHistoryStatus(Widgets);
-        BlocksUIGuiRefreshPropertyPanel(Widgets);
-        BlocksUIGuiRefreshCanvas(Widgets);
+        BlocksUIGuiCanvasPlaceKind(Widgets, Widgets->Document.PendingKind, LogicX,
+                                   LogicY);
         return;
     }
     BlocksUIDocumentSelectAt(&Widgets->Document, LogicX, LogicY);
@@ -213,4 +243,13 @@ void BlocksUIGuiCanvasBind(BlocksUIGuiWidgets *Widgets) {
     Motion = gtk_event_controller_motion_new();
     g_signal_connect(Motion, "motion", G_CALLBACK(BlocksUIGuiCanvasOnMotion), Widgets);
     gtk_widget_add_controller(GTK_WIDGET(Widgets->Canvas), Motion);
+    {
+        GtkDropTarget *DropTarget =
+            gtk_drop_target_new(G_TYPE_STRING, GDK_ACTION_COPY);
+
+        g_signal_connect(DropTarget, "drop", G_CALLBACK(BlocksUIGuiCanvasOnDrop),
+                         Widgets);
+        gtk_widget_add_controller(GTK_WIDGET(Widgets->Canvas),
+                                  GTK_EVENT_CONTROLLER(DropTarget));
+    }
 }

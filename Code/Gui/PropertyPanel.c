@@ -141,9 +141,13 @@ void BlocksUIGuiPropertyBind(BlocksUIGuiWidgets *Widgets, GtkBox *RightColumn) {
     GtkWidget *IdRow;
     GtkWidget *TextRow;
 
-    gtk_box_append(RightColumn, gtk_label_new("Properties"));
+    Widgets->PropertiesTitleLabel = GTK_LABEL(
+        gtk_label_new(BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_PROPERTIES)));
+    gtk_box_append(RightColumn, GTK_WIDGET(Widgets->PropertiesTitleLabel));
     TitleRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_box_append(GTK_BOX(TitleRow), gtk_label_new("window"));
+    Widgets->WindowFieldLabel = GTK_LABEL(
+        gtk_label_new(BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_WINDOW)));
+    gtk_box_append(GTK_BOX(TitleRow), GTK_WIDGET(Widgets->WindowFieldLabel));
     Widgets->TitleEntry = GTK_ENTRY(gtk_entry_new());
     gtk_widget_set_hexpand(GTK_WIDGET(Widgets->TitleEntry), TRUE);
     g_signal_connect(Widgets->TitleEntry, "changed", G_CALLBACK(BlocksUIGuiOnTitleChanged),

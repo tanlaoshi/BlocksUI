@@ -1,5 +1,5 @@
 /*
- * Palette.c — 左侧控件种类 + 删除
+ * Palette.c — 左侧控件：点击待放 + 拖到画布
  */
 #include "Widgets.h"
 
@@ -9,7 +9,8 @@ static void BlocksUIGuiOnPickKind(GtkButton *Button, gpointer UserData) {
 
     BlocksUIDocumentSetPendingKind(&Widgets->Document,
                                    BlocksUIWidgetKindFromName(Name));
-    BlocksUIGuiSetStatus(Widgets, "click canvas to place");
+    BlocksUIGuiSetStatus(
+        Widgets, BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_DRAG_HINT));
 }
 
 static void BlocksUIGuiOnDeleteSelected(GtkButton *Button, gpointer UserData) {
@@ -26,28 +27,62 @@ static void BlocksUIGuiOnDeleteSelected(GtkButton *Button, gpointer UserData) {
     BlocksUIGuiRefreshHistoryStatus(Widgets);
 }
 
-static GtkWidget *BlocksUIGuiMakeKindButton(BlocksUIGuiWidgets *Widgets,
-                                           const char *Label, const char *KindName) {
-    GtkWidget *Button = gtk_button_new_with_label(Label);
+static GdkContentProvider *BlocksUIGuiOnDragPrepare(GtkDragSource *Source, double X,
+                                                    double Y, gpointer UserData) {
+    GtkWidget *Button = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(Source));
+    const char *KindName;
 
-    gtk_widget_set_name(Button, KindName);
+    (void)X;
+    (void)Y;
+    (void)UserData;
+    KindName = gtk_widget_get_name(Button);
+    if (KindName == 0) {
+        return NULL;
+    }
+    return gdk_content_provider_new_typed(G_TYPE_STRING, KindName);
+}
+
+static void BlocksUIGuiAttachKindDrag(GtkWidget *Button) {
+    GtkDragSource *Source = gtk_drag_source_new();
+
+    gtk_drag_source_set_actions(Source, GDK_ACTION_COPY);
+    g_signal_connect(Source, "prepare", G_CALLBACK(BlocksUIGuiOnDragPrepare), NULL);
+    gtk_widget_add_controller(Button, GTK_EVENT_CONTROLLER(Source));
+}
+
+static GtkButton *BlocksUIGuiMakeKindButton(BlocksUIGuiWidgets *Widgets,
+                                           BlocksUILocaleTextId LabelId,
+                                           const char *KindName) {
+    GtkButton *Button = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, LabelId)));
+
+    gtk_widget_set_name(GTK_WIDGET(Button), KindName);
     g_signal_connect(Button, "clicked", G_CALLBACK(BlocksUIGuiOnPickKind), Widgets);
+    BlocksUIGuiAttachKindDrag(GTK_WIDGET(Button));
     return Button;
 }
 
 void BlocksUIGuiPaletteBind(BlocksUIGuiWidgets *Widgets, GtkBox *LeftColumn) {
-    GtkWidget *DeleteButton;
+    Widgets->PaletteTitleLabel =
+        GTK_LABEL(gtk_label_new(BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_WIDGETS)));
+    gtk_box_append(LeftColumn, GTK_WIDGET(Widgets->PaletteTitleLabel));
 
-    gtk_box_append(LeftColumn, gtk_label_new("Widgets"));
-    gtk_box_append(LeftColumn,
-                   BlocksUIGuiMakeKindButton(Widgets, "Button", "button"));
-    gtk_box_append(LeftColumn, BlocksUIGuiMakeKindButton(Widgets, "Label", "label"));
-    gtk_box_append(LeftColumn,
-                   BlocksUIGuiMakeKindButton(Widgets, "CheckBox", "checkbox"));
-    gtk_box_append(LeftColumn,
-                   BlocksUIGuiMakeKindButton(Widgets, "TextBox", "textbox"));
-    DeleteButton = gtk_button_new_with_label("Delete");
-    g_signal_connect(DeleteButton, "clicked", G_CALLBACK(BlocksUIGuiOnDeleteSelected),
-                     Widgets);
-    gtk_box_append(LeftColumn, DeleteButton);
+    Widgets->KindButtonButton =
+        BlocksUIGuiMakeKindButton(Widgets, BLOCKS_UI_TEXT_BUTTON, "button");
+    Widgets->KindLabelButton =
+        BlocksUIGuiMakeKindButton(Widgets, BLOCKS_UI_TEXT_LABEL, "label");
+    Widgets->KindCheckBoxButton =
+        BlocksUIGuiMakeKindButton(Widgets, BLOCKS_UI_TEXT_CHECKBOX, "checkbox");
+    Widgets->KindTextBoxButton =
+        BlocksUIGuiMakeKindButton(Widgets, BLOCKS_UI_TEXT_TEXTBOX, "textbox");
+    gtk_box_append(LeftColumn, GTK_WIDGET(Widgets->KindButtonButton));
+    gtk_box_append(LeftColumn, GTK_WIDGET(Widgets->KindLabelButton));
+    gtk_box_append(LeftColumn, GTK_WIDGET(Widgets->KindCheckBoxButton));
+    gtk_box_append(LeftColumn, GTK_WIDGET(Widgets->KindTextBoxButton));
+
+    Widgets->DeleteButton = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_DELETE)));
+    g_signal_connect(Widgets->DeleteButton, "clicked",
+                     G_CALLBACK(BlocksUIGuiOnDeleteSelected), Widgets);
+    gtk_box_append(LeftColumn, GTK_WIDGET(Widgets->DeleteButton));
 }

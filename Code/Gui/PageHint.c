@@ -8,20 +8,59 @@
 #include <stdio.h>
 #include <string.h>
 
+static BlocksUILocaleTextId BlocksUIGuiPageLocaleId(int PageIndex) {
+    switch (PageIndex) {
+    case 1:
+        return BLOCKS_UI_TEXT_PAGE_SETTINGS;
+    case 2:
+        return BLOCKS_UI_TEXT_PAGE_ABOUT;
+    case 3:
+        return BLOCKS_UI_TEXT_PAGE_FILES;
+    case 4:
+        return BLOCKS_UI_TEXT_PAGE_NAV;
+    default:
+        return BLOCKS_UI_TEXT_PAGE_HOME;
+    }
+}
+
+void BlocksUIGuiRebuildPageNames(BlocksUIGuiWidgets *Widgets) {
+    GtkStringList *Names;
+    int Index;
+    guint Selected;
+
+    if (Widgets == 0 || Widgets->PageDropDown == 0) {
+        return;
+    }
+    Selected = gtk_drop_down_get_selected(Widgets->PageDropDown);
+    Names = gtk_string_list_new(NULL);
+    for (Index = 0; Index < BlocksUIPageGuideCount(); Index++) {
+        gtk_string_list_append(
+            Names, BlocksUILocaleText(Widgets->Language, BlocksUIGuiPageLocaleId(Index)));
+    }
+    gtk_drop_down_set_model(Widgets->PageDropDown, G_LIST_MODEL(Names));
+    if (Selected >= (guint)BlocksUIPageGuideCount()) {
+        Selected = 0;
+    }
+    gtk_drop_down_set_selected(Widgets->PageDropDown, Selected);
+}
+
 void BlocksUIGuiRefreshPageHint(BlocksUIGuiWidgets *Widgets) {
     const BlocksUIPageGuide *Guide;
-    char Message[160];
+    char Message[192];
     int Suggested;
     int LogicId;
     BlocksUIWidget *Selected;
+    const char *PageName;
 
     if (Widgets == 0 || Widgets->PageHintLabel == 0) {
         return;
     }
     Guide = BlocksUIPageGuideAt(Widgets->PageIndex);
     Suggested = BlocksUIPageGuideSuggestLogicId(&Widgets->Document, Widgets->PageIndex);
+    PageName =
+        BlocksUILocaleText(Widgets->Language, BlocksUIGuiPageLocaleId(Widgets->PageIndex));
     snprintf(Message, sizeof(Message),
-             "%s  %d–%d\nnext logic %d\nid prefix %s_", Guide->Name,
+             BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_PAGE_HINT), PageName,
              Guide->RangeBegin, Guide->RangeEnd, Suggested, Guide->IdPrefix);
     gtk_label_set_text(Widgets->PageHintLabel, Message);
 
@@ -30,15 +69,20 @@ void BlocksUIGuiRefreshPageHint(BlocksUIGuiWidgets *Widgets) {
     }
     Selected = BlocksUIDocumentSelected(&Widgets->Document);
     if (Selected == 0 || Widgets->Document.SelectedIndex < 0) {
-        gtk_label_set_text(Widgets->LogicHintLabel, "logic —");
+        gtk_label_set_text(Widgets->LogicHintLabel,
+                           BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_LOGIC_NONE));
         return;
     }
     LogicId = BlocksUIPageGuideLogicIdForWidget(
         &Widgets->Document, Widgets->PageIndex, Widgets->Document.SelectedIndex);
     if (LogicId < 0) {
-        snprintf(Message, sizeof(Message), "logic — (id not %s_*)", Guide->IdPrefix);
+        snprintf(Message, sizeof(Message),
+                 BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_LOGIC_OTHER),
+                 Guide->IdPrefix);
     } else {
-        snprintf(Message, sizeof(Message), "logic %d  (enum hint)", LogicId);
+        snprintf(Message, sizeof(Message),
+                 BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_LOGIC_VALUE),
+                 LogicId);
     }
     gtk_label_set_text(Widgets->LogicHintLabel, Message);
 }
@@ -66,11 +110,13 @@ void BlocksUIGuiPageHintBind(BlocksUIGuiWidgets *Widgets, GtkBox *RightColumn) {
     int Index;
     const BlocksUIPageGuide *Guide;
 
-    gtk_box_append(RightColumn, gtk_label_new("Page (ID ranges)"));
+    Widgets->PageTitleLabel = GTK_LABEL(
+        gtk_label_new(BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_PAGE)));
+    gtk_box_append(RightColumn, GTK_WIDGET(Widgets->PageTitleLabel));
     Names = gtk_string_list_new(NULL);
     for (Index = 0; Index < BlocksUIPageGuideCount(); Index++) {
-        Guide = BlocksUIPageGuideAt(Index);
-        gtk_string_list_append(Names, Guide->Name);
+        gtk_string_list_append(
+            Names, BlocksUILocaleText(Widgets->Language, BlocksUIGuiPageLocaleId(Index)));
     }
     Widgets->PageDropDown = GTK_DROP_DOWN(gtk_drop_down_new(G_LIST_MODEL(Names), NULL));
     gtk_drop_down_set_selected(Widgets->PageDropDown, 0);
@@ -83,7 +129,8 @@ void BlocksUIGuiPageHintBind(BlocksUIGuiWidgets *Widgets, GtkBox *RightColumn) {
     gtk_label_set_wrap(Widgets->PageHintLabel, TRUE);
     gtk_box_append(RightColumn, GTK_WIDGET(Widgets->PageHintLabel));
 
-    Widgets->LogicHintLabel = GTK_LABEL(gtk_label_new("logic —"));
+    Widgets->LogicHintLabel = GTK_LABEL(gtk_label_new(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_LOGIC_NONE)));
     gtk_label_set_xalign(Widgets->LogicHintLabel, 0.0f);
     gtk_label_set_wrap(Widgets->LogicHintLabel, TRUE);
     gtk_box_append(RightColumn, GTK_WIDGET(Widgets->LogicHintLabel));

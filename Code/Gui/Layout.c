@@ -10,6 +10,18 @@ static void BlocksUIGuiApplyHistoryRefresh(BlocksUIGuiWidgets *Widgets) {
     BlocksUIGuiRefreshHistoryStatus(Widgets);
 }
 
+static void BlocksUIGuiOnLanguageToggle(GtkButton *Button, gpointer UserData) {
+    BlocksUIGuiWidgets *Widgets = (BlocksUIGuiWidgets *)UserData;
+
+    (void)Button;
+    if (Widgets->Language == BLOCKS_UI_LANGUAGE_CHINESE) {
+        Widgets->Language = BLOCKS_UI_LANGUAGE_ENGLISH;
+    } else {
+        Widgets->Language = BLOCKS_UI_LANGUAGE_CHINESE;
+    }
+    BlocksUIGuiApplyLocale(Widgets);
+}
+
 static void BlocksUIGuiOnUndo(GtkButton *Button, gpointer UserData) {
     BlocksUIGuiWidgets *Widgets = (BlocksUIGuiWidgets *)UserData;
 
@@ -146,9 +158,11 @@ GtkWidget *BlocksUIGuiBuildWindow(BlocksUIGuiWidgets *Widgets) {
     CenterScroll = gtk_scrolled_window_new();
     gtk_widget_set_hexpand(CenterScroll, TRUE);
     gtk_widget_set_vexpand(CenterScroll, TRUE);
-    CanvasFrame = gtk_frame_new("Canvas 1280×720");
+    CanvasFrame = gtk_frame_new(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_CANVAS));
+    Widgets->CanvasFrame = GTK_FRAME(CanvasFrame);
     Widgets->Canvas = GTK_DRAWING_AREA(gtk_drawing_area_new());
-    gtk_frame_set_child(GTK_FRAME(CanvasFrame), GTK_WIDGET(Widgets->Canvas));
+    gtk_frame_set_child(Widgets->CanvasFrame, GTK_WIDGET(Widgets->Canvas));
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(CenterScroll), CanvasFrame);
     gtk_box_append(GTK_BOX(Body), CenterScroll);
     BlocksUIGuiCanvasBind(Widgets);
@@ -166,19 +180,26 @@ GtkWidget *BlocksUIGuiBuildWindow(BlocksUIGuiWidgets *Widgets) {
     gtk_widget_set_margin_end(Bottom, 8);
     gtk_widget_set_margin_bottom(Bottom, 8);
     gtk_widget_set_margin_top(Bottom, 4);
-    {
-        GtkWidget *UndoButton = gtk_button_new_with_label("Undo");
-        GtkWidget *RedoButton = gtk_button_new_with_label("Redo");
-
-        g_signal_connect(UndoButton, "clicked", G_CALLBACK(BlocksUIGuiOnUndo),
-                         Widgets);
-        g_signal_connect(RedoButton, "clicked", G_CALLBACK(BlocksUIGuiOnRedo),
-                         Widgets);
-        gtk_box_append(GTK_BOX(Bottom), UndoButton);
-        gtk_box_append(GTK_BOX(Bottom), RedoButton);
-    }
+    Widgets->UndoButton = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_UNDO)));
+    Widgets->RedoButton = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_REDO)));
+    g_signal_connect(Widgets->UndoButton, "clicked", G_CALLBACK(BlocksUIGuiOnUndo),
+                     Widgets);
+    g_signal_connect(Widgets->RedoButton, "clicked", G_CALLBACK(BlocksUIGuiOnRedo),
+                     Widgets);
+    gtk_box_append(GTK_BOX(Bottom), GTK_WIDGET(Widgets->UndoButton));
+    gtk_box_append(GTK_BOX(Bottom), GTK_WIDGET(Widgets->RedoButton));
     BlocksUIGuiFileBind(Widgets, GTK_BOX(Bottom));
-    Widgets->StatusLabel = GTK_LABEL(gtk_label_new("ready"));
+    {
+        Widgets->LanguageButton = GTK_BUTTON(gtk_button_new_with_label(
+            BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_LANGUAGE_TOGGLE)));
+        g_signal_connect(Widgets->LanguageButton, "clicked",
+                         G_CALLBACK(BlocksUIGuiOnLanguageToggle), Widgets);
+        gtk_box_append(GTK_BOX(Bottom), GTK_WIDGET(Widgets->LanguageButton));
+    }
+    Widgets->StatusLabel = GTK_LABEL(gtk_label_new(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_READY)));
     gtk_widget_set_hexpand(GTK_WIDGET(Widgets->StatusLabel), TRUE);
     gtk_label_set_xalign(Widgets->StatusLabel, 0.0f);
     gtk_box_append(GTK_BOX(Bottom), GTK_WIDGET(Widgets->StatusLabel));

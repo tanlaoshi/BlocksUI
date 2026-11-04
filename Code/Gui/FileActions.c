@@ -31,11 +31,13 @@ static int BlocksUIGuiWriteDocumentPath(BlocksUIGuiWidgets *Widgets,
     char Message[300];
 
     if (BlocksUIUitxtExportPath(&Widgets->Document, Path) != 0) {
-        BlocksUIGuiSetStatus(Widgets, "save failed");
+        BlocksUIGuiSetStatus(
+            Widgets, BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_SAVE_FAILED));
         return -1;
     }
     BlocksUIGuiRememberDocumentPath(Widgets, Path);
-    snprintf(Message, sizeof(Message), "saved %s", Path);
+    snprintf(Message, sizeof(Message), "%s %s",
+             BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_SAVED_PREFIX), Path);
     BlocksUIGuiSetStatus(Widgets, Message);
     return 0;
 }
@@ -59,10 +61,14 @@ static void BlocksUIGuiOpenFinish(GObject *Source, GAsyncResult *Result,
             char Message[300];
 
             BlocksUIGuiAfterDocumentLoad(Widgets, Path);
-            snprintf(Message, sizeof(Message), "opened %s", Path);
+            snprintf(Message, sizeof(Message), "%s %s",
+                     BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_OPENED_PREFIX),
+                     Path);
             BlocksUIGuiSetStatus(Widgets, Message);
         } else {
-            BlocksUIGuiSetStatus(Widgets, "open failed");
+            BlocksUIGuiSetStatus(
+                Widgets,
+                BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_OPEN_FAILED));
         }
         g_free(Path);
     }
@@ -97,7 +103,8 @@ static void BlocksUIGuiOnOpen(GtkButton *Button, gpointer UserData) {
 
     (void)Button;
     Dialog = gtk_file_dialog_new();
-    gtk_file_dialog_set_title(Dialog, "Open .uitxt");
+    gtk_file_dialog_set_title(
+        Dialog, BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_OPEN_TITLE));
     Initial = g_file_new_for_path(".");
     gtk_file_dialog_set_initial_folder(Dialog, Initial);
     g_object_unref(Initial);
@@ -113,7 +120,8 @@ static void BlocksUIGuiOnSaveAs(GtkButton *Button, gpointer UserData) {
 
     (void)Button;
     Dialog = gtk_file_dialog_new();
-    gtk_file_dialog_set_title(Dialog, "Save .uitxt");
+    gtk_file_dialog_set_title(
+        Dialog, BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_SAVE_TITLE));
     if (Widgets->DocumentPath[0] != 0) {
         const char *Slash = strrchr(Widgets->DocumentPath, '/');
 
@@ -139,15 +147,20 @@ static void BlocksUIGuiOnSave(GtkButton *Button, gpointer UserData) {
 }
 
 void BlocksUIGuiFileBind(BlocksUIGuiWidgets *Widgets, GtkBox *BottomBar) {
-    GtkWidget *OpenButton = gtk_button_new_with_label("Open");
-    GtkWidget *SaveButton = gtk_button_new_with_label("Save");
-    GtkWidget *SaveAsButton = gtk_button_new_with_label("Save As");
+    Widgets->OpenButton = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_OPEN)));
+    Widgets->SaveButton = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_SAVE)));
+    Widgets->SaveAsButton = GTK_BUTTON(gtk_button_new_with_label(
+        BlocksUILocaleText(Widgets->Language, BLOCKS_UI_TEXT_SAVE_AS)));
 
-    g_signal_connect(OpenButton, "clicked", G_CALLBACK(BlocksUIGuiOnOpen), Widgets);
-    g_signal_connect(SaveButton, "clicked", G_CALLBACK(BlocksUIGuiOnSave), Widgets);
-    g_signal_connect(SaveAsButton, "clicked", G_CALLBACK(BlocksUIGuiOnSaveAs),
+    g_signal_connect(Widgets->OpenButton, "clicked", G_CALLBACK(BlocksUIGuiOnOpen),
                      Widgets);
-    gtk_box_append(BottomBar, OpenButton);
-    gtk_box_append(BottomBar, SaveButton);
-    gtk_box_append(BottomBar, SaveAsButton);
+    g_signal_connect(Widgets->SaveButton, "clicked", G_CALLBACK(BlocksUIGuiOnSave),
+                     Widgets);
+    g_signal_connect(Widgets->SaveAsButton, "clicked", G_CALLBACK(BlocksUIGuiOnSaveAs),
+                     Widgets);
+    gtk_box_append(BottomBar, GTK_WIDGET(Widgets->OpenButton));
+    gtk_box_append(BottomBar, GTK_WIDGET(Widgets->SaveButton));
+    gtk_box_append(BottomBar, GTK_WIDGET(Widgets->SaveAsButton));
 }
