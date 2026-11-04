@@ -5,6 +5,7 @@
 
 typedef struct BlocksUIDocument {
     char Title[BLOCKS_UI_TITLE_MAX];
+    char IdPrefix[16];
     int Width;
     int Height;
     BlocksUIWidget Widgets[BLOCKS_UI_WIDGET_MAX];

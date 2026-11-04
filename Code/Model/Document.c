@@ -12,6 +12,7 @@ void BlocksUIDocumentInitialize(BlocksUIDocument *Document) {
     }
     memset(Document, 0, sizeof(*Document));
     snprintf(Document->Title, sizeof(Document->Title), "MyApp");
+    snprintf(Document->IdPrefix, sizeof(Document->IdPrefix), "home");
     Document->Width = BLOCKS_UI_DESIGN_WIDTH;
     Document->Height = BLOCKS_UI_DESIGN_HEIGHT;
     Document->SelectedIndex = -1;
@@ -41,7 +42,12 @@ static void BlocksUIDocumentMakeId(BlocksUIDocument *Document,
         break;
     }
     for (Serial = 1; Serial < 1000; Serial++) {
-        snprintf(Candidate, sizeof(Candidate), "%s%d", Prefix, Serial);
+        if (Document->IdPrefix[0] != 0) {
+            snprintf(Candidate, sizeof(Candidate), "%s_%s%d", Document->IdPrefix,
+                     Prefix, Serial);
+        } else {
+            snprintf(Candidate, sizeof(Candidate), "%s%d", Prefix, Serial);
+        }
         for (i = 0; i < Document->Count; i++) {
             if (strcmp(Document->Widgets[i].Id, Candidate) == 0) {
                 break;
@@ -52,7 +58,11 @@ static void BlocksUIDocumentMakeId(BlocksUIDocument *Document,
             return;
         }
     }
-    snprintf(Out, OutMax, "%s9", Prefix);
+    if (Document->IdPrefix[0] != 0) {
+        snprintf(Out, OutMax, "%s_%s9", Document->IdPrefix, Prefix);
+    } else {
+        snprintf(Out, OutMax, "%s9", Prefix);
+    }
 }
 
 int BlocksUIDocumentAddWidget(BlocksUIDocument *Document, BlocksUIWidgetKind Kind,

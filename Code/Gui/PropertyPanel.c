@@ -44,6 +44,7 @@ void BlocksUIGuiRefreshPropertyPanel(BlocksUIGuiWidgets *Widgets) {
         gtk_widget_set_sensitive(GTK_WIDGET(Widgets->HeightSpin), TRUE);
     }
     sBlocksUIGuiPropertyQuiet = 0;
+    BlocksUIGuiRefreshPageHint(Widgets);
 }
 
 static void BlocksUIGuiOnTitleChanged(GtkEditable *Editable, gpointer UserData) {

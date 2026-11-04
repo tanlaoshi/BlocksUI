@@ -154,10 +154,11 @@ GtkWidget *BlocksUIGuiBuildWindow(BlocksUIGuiWidgets *Widgets) {
     BlocksUIGuiCanvasBind(Widgets);
 
     Right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
-    gtk_widget_set_size_request(Right, 140, -1);
+    gtk_widget_set_size_request(Right, 168, -1);
     gtk_widget_set_hexpand(Right, FALSE);
     gtk_widget_set_hexpand(Left, FALSE);
     gtk_box_append(GTK_BOX(Body), Right);
+    BlocksUIGuiPageHintBind(Widgets, GTK_BOX(Right));
     BlocksUIGuiPropertyBind(Widgets, GTK_BOX(Right));
 
     Bottom = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);

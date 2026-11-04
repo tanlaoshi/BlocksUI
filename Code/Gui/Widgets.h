@@ -3,6 +3,7 @@
 
 #include "../Model/Document.h"
 #include "../Model/History.h"
+#include "../Model/PageGuide.h"
 
 #include <gtk/gtk.h>
 
@@ -21,10 +22,14 @@ typedef struct BlocksUIGuiWidgets {
     GtkSpinButton *WidthSpin;
     GtkSpinButton *HeightSpin;
     GtkLabel *StatusLabel;
+    GtkDropDown *PageDropDown;
+    GtkLabel *PageHintLabel;
+    GtkLabel *LogicHintLabel;
     BlocksUIDocument Document;
     BlocksUIHistory History;
     char DocumentPath[BLOCKS_UI_DOCUMENT_PATH_MAX];
     double DisplayScale;
+    int PageIndex;
     int Dragging;
     int DragOriginX;
     int DragOriginY;
@@ -36,12 +41,14 @@ typedef struct BlocksUIGuiWidgets {
 GtkWidget *BlocksUIGuiBuildWindow(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiRefreshCanvas(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiRefreshPropertyPanel(BlocksUIGuiWidgets *Widgets);
+void BlocksUIGuiRefreshPageHint(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiSetStatus(BlocksUIGuiWidgets *Widgets, const char *Text);
 void BlocksUIGuiPushUndo(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiRefreshHistoryStatus(BlocksUIGuiWidgets *Widgets);
 
 void BlocksUIGuiCanvasBind(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiPaletteBind(BlocksUIGuiWidgets *Widgets, GtkBox *LeftColumn);
+void BlocksUIGuiPageHintBind(BlocksUIGuiWidgets *Widgets, GtkBox *RightColumn);
 void BlocksUIGuiPropertyBind(BlocksUIGuiWidgets *Widgets, GtkBox *RightColumn);
 void BlocksUIGuiFileBind(BlocksUIGuiWidgets *Widgets, GtkBox *BottomBar);
 

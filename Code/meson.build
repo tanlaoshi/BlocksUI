@@ -9,6 +9,7 @@ blocksui_model = static_library(
     'Model/UitxtExport.c',
     'Model/UitxtImport.c',
     'Model/History.c',
+    'Model/PageGuide.c',
   ),
   include_directories: model_inc,
 )
@@ -31,6 +32,7 @@ executable(
     'Gui/Support.c',
     'Gui/FileActions.c',
     'Gui/Icon.c',
+    'Gui/PageHint.c',
   ),
   include_directories: gui_inc,
   dependencies: [blocksui_model_dep, gtk4_dep],
