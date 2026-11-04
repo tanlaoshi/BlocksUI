@@ -7,6 +7,7 @@ blocksui_model = static_library(
     'Model/WidgetKind.c',
     'Model/Document.c',
     'Model/UitxtExport.c',
+    'Model/UitxtImport.c',
     'Model/History.c',
   ),
   include_directories: model_inc,
@@ -28,6 +29,8 @@ executable(
     'Gui/Palette.c',
     'Gui/PropertyPanel.c',
     'Gui/Support.c',
+    'Gui/FileActions.c',
+    'Gui/Icon.c',
   ),
   include_directories: gui_inc,
   dependencies: [blocksui_model_dep, gtk4_dep],
@@ -37,6 +40,13 @@ executable(
 executable(
   'blocksui-export-smoke',
   files('Model/ExportSmoke.c'),
+  dependencies: blocksui_model_dep,
+  install: false,
+)
+
+executable(
+  'blocksui-import-smoke',
+  files('Model/ImportSmoke.c'),
   dependencies: blocksui_model_dep,
   install: false,
 )

@@ -12,6 +12,7 @@ Ubuntu 主机侧 **Blocks 应用 UI 设计器**：拖控件 → 导出 `.uitxt` 
 meson setup Build/meson
 meson compile -C Build/meson
 ./Build/meson/Code/blocksui-gui
+./Tools/install-desktop.sh   # 图标 + 应用菜单 / 桌面快捷方式
 ```
 
 入门：[`Docs/00-概述.md`](Docs/00-概述.md) → [`Docs/02-目录与构建.md`](Docs/02-目录与构建.md) → [`Docs/05-当前星.md`](Docs/05-当前星.md)。

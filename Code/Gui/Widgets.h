@@ -7,6 +7,7 @@
 #include <gtk/gtk.h>
 
 #define BLOCKS_UI_GRID_SIZE 40
+#define BLOCKS_UI_DOCUMENT_PATH_MAX 512
 
 typedef struct BlocksUIGuiWidgets {
     GtkApplication *Application;
@@ -22,6 +23,7 @@ typedef struct BlocksUIGuiWidgets {
     GtkLabel *StatusLabel;
     BlocksUIDocument Document;
     BlocksUIHistory History;
+    char DocumentPath[BLOCKS_UI_DOCUMENT_PATH_MAX];
     double DisplayScale;
     int Dragging;
     int DragOriginX;
@@ -41,5 +43,6 @@ void BlocksUIGuiRefreshHistoryStatus(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiCanvasBind(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiPaletteBind(BlocksUIGuiWidgets *Widgets, GtkBox *LeftColumn);
 void BlocksUIGuiPropertyBind(BlocksUIGuiWidgets *Widgets, GtkBox *RightColumn);
+void BlocksUIGuiFileBind(BlocksUIGuiWidgets *Widgets, GtkBox *BottomBar);
 
 #endif
