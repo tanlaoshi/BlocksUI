@@ -16,10 +16,14 @@ static void BlocksUIGuiOnDeleteSelected(GtkButton *Button, gpointer UserData) {
     BlocksUIGuiWidgets *Widgets = (BlocksUIGuiWidgets *)UserData;
 
     (void)Button;
+    if (BlocksUIDocumentSelected(&Widgets->Document) == 0) {
+        return;
+    }
+    BlocksUIGuiPushUndo(Widgets);
     BlocksUIDocumentRemoveSelected(&Widgets->Document);
     BlocksUIGuiRefreshPropertyPanel(Widgets);
     BlocksUIGuiRefreshCanvas(Widgets);
-    BlocksUIGuiSetStatus(Widgets, "deleted");
+    BlocksUIGuiRefreshHistoryStatus(Widgets);
 }
 
 static GtkWidget *BlocksUIGuiMakeKindButton(BlocksUIGuiWidgets *Widgets,

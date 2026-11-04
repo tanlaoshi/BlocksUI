@@ -2,8 +2,11 @@
 #define BLOCKS_UI_GUI_WIDGETS_H
 
 #include "../Model/Document.h"
+#include "../Model/History.h"
 
 #include <gtk/gtk.h>
+
+#define BLOCKS_UI_GRID_SIZE 40
 
 typedef struct BlocksUIGuiWidgets {
     GtkApplication *Application;
@@ -18,18 +21,22 @@ typedef struct BlocksUIGuiWidgets {
     GtkSpinButton *HeightSpin;
     GtkLabel *StatusLabel;
     BlocksUIDocument Document;
+    BlocksUIHistory History;
     double DisplayScale;
     int Dragging;
     int DragOriginX;
     int DragOriginY;
     int DragWidgetStartX;
     int DragWidgetStartY;
+    int DragUndoPushed;
 } BlocksUIGuiWidgets;
 
 GtkWidget *BlocksUIGuiBuildWindow(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiRefreshCanvas(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiRefreshPropertyPanel(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiSetStatus(BlocksUIGuiWidgets *Widgets, const char *Text);
+void BlocksUIGuiPushUndo(BlocksUIGuiWidgets *Widgets);
+void BlocksUIGuiRefreshHistoryStatus(BlocksUIGuiWidgets *Widgets);
 
 void BlocksUIGuiCanvasBind(BlocksUIGuiWidgets *Widgets);
 void BlocksUIGuiPaletteBind(BlocksUIGuiWidgets *Widgets, GtkBox *LeftColumn);

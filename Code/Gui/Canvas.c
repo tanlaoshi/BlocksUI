@@ -80,12 +80,12 @@ static void BlocksUIGuiCanvasOnDraw(GtkDrawingArea *Area, cairo_t *Cairo, int Wi
     cairo_fill(Cairo);
     cairo_set_source_rgb(Cairo, 0.85, 0.85, 0.88);
     cairo_set_line_width(Cairo, 1.0 / Scale);
-    for (Grid = 0; Grid <= Widgets->Document.Width; Grid += 40) {
+    for (Grid = 0; Grid <= Widgets->Document.Width; Grid += BLOCKS_UI_GRID_SIZE) {
         cairo_move_to(Cairo, Grid, 0);
         cairo_line_to(Cairo, Grid, Widgets->Document.Height);
         cairo_stroke(Cairo);
     }
-    for (Grid = 0; Grid <= Widgets->Document.Height; Grid += 40) {
+    for (Grid = 0; Grid <= Widgets->Document.Height; Grid += BLOCKS_UI_GRID_SIZE) {
         cairo_move_to(Cairo, 0, Grid);
         cairo_line_to(Cairo, Widgets->Document.Width, Grid);
         cairo_stroke(Cairo);
@@ -107,11 +107,15 @@ static void BlocksUIGuiCanvasOnPressed(GtkGestureClick *Gesture, int NPress,
 
     (void)Gesture;
     (void)NPress;
+    gtk_widget_grab_focus(GTK_WIDGET(Widgets->Canvas));
     BlocksUIGuiCanvasMapPoint(Widgets, X, Y, &LogicX, &LogicY);
     if (Widgets->Document.HasPendingPlace) {
-        BlocksUIDocumentAddWidget(&Widgets->Document, Widgets->Document.PendingKind,
-                                  LogicX, LogicY);
-        BlocksUIGuiSetStatus(Widgets, "placed");
+        BlocksUIGuiPushUndo(Widgets);
+        BlocksUIDocumentAddWidget(
+            &Widgets->Document, Widgets->Document.PendingKind,
+            BlocksUISnapToGrid(LogicX, BLOCKS_UI_GRID_SIZE),
+            BlocksUISnapToGrid(LogicY, BLOCKS_UI_GRID_SIZE));
+        BlocksUIGuiRefreshHistoryStatus(Widgets);
         BlocksUIGuiRefreshPropertyPanel(Widgets);
         BlocksUIGuiRefreshCanvas(Widgets);
         return;
@@ -121,6 +125,7 @@ static void BlocksUIGuiCanvasOnPressed(GtkGestureClick *Gesture, int NPress,
         BlocksUIWidget *Selected = BlocksUIDocumentSelected(&Widgets->Document);
 
         Widgets->Dragging = 1;
+        Widgets->DragUndoPushed = 0;
         Widgets->DragOriginX = LogicX;
         Widgets->DragOriginY = LogicY;
         Widgets->DragWidgetStartX = Selected->X;
@@ -138,7 +143,19 @@ static void BlocksUIGuiCanvasOnReleased(GtkGestureClick *Gesture, int NPress,
     (void)NPress;
     (void)X;
     (void)Y;
+    if (Widgets->Dragging) {
+        BlocksUIWidget *Selected = BlocksUIDocumentSelected(&Widgets->Document);
+
+        if (Selected != 0) {
+            Selected->X = BlocksUISnapToGrid(Selected->X, BLOCKS_UI_GRID_SIZE);
+            Selected->Y = BlocksUISnapToGrid(Selected->Y, BLOCKS_UI_GRID_SIZE);
+            BlocksUIGuiRefreshPropertyPanel(Widgets);
+            BlocksUIGuiRefreshCanvas(Widgets);
+        }
+    }
     Widgets->Dragging = 0;
+    Widgets->DragUndoPushed = 0;
+    BlocksUIGuiRefreshHistoryStatus(Widgets);
 }
 
 static void BlocksUIGuiCanvasOnMotion(GtkEventControllerMotion *Controller,
@@ -155,6 +172,10 @@ static void BlocksUIGuiCanvasOnMotion(GtkEventControllerMotion *Controller,
     Selected = BlocksUIDocumentSelected(&Widgets->Document);
     if (Selected == 0) {
         return;
+    }
+    if (!Widgets->DragUndoPushed) {
+        BlocksUIGuiPushUndo(Widgets);
+        Widgets->DragUndoPushed = 1;
     }
     BlocksUIGuiCanvasMapPoint(Widgets, X, Y, &LogicX, &LogicY);
     Selected->X = Widgets->DragWidgetStartX + (LogicX - Widgets->DragOriginX);
@@ -177,6 +198,8 @@ void BlocksUIGuiCanvasBind(BlocksUIGuiWidgets *Widgets) {
 
     PixelWidth = (int)(Widgets->Document.Width * Widgets->DisplayScale);
     PixelHeight = (int)(Widgets->Document.Height * Widgets->DisplayScale);
+    gtk_widget_set_focusable(GTK_WIDGET(Widgets->Canvas), TRUE);
+    gtk_widget_set_can_focus(GTK_WIDGET(Widgets->Canvas), TRUE);
     gtk_drawing_area_set_content_width(Widgets->Canvas, PixelWidth);
     gtk_drawing_area_set_content_height(Widgets->Canvas, PixelHeight);
     gtk_drawing_area_set_draw_func(Widgets->Canvas, BlocksUIGuiCanvasOnDraw, Widgets,

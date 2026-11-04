@@ -7,6 +7,7 @@ blocksui_model = static_library(
     'Model/WidgetKind.c',
     'Model/Document.c',
     'Model/UitxtExport.c',
+    'Model/History.c',
   ),
   include_directories: model_inc,
 )

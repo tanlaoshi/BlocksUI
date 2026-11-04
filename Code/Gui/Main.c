@@ -21,7 +21,8 @@ int main(int ArgumentCount, char **ArgumentVector) {
 
     memset(&Widgets, 0, sizeof(Widgets));
     BlocksUIDocumentInitialize(&Widgets.Document);
-    Widgets.DisplayScale = 0.55;
+    BlocksUIHistoryInitialize(&Widgets.History);
+    Widgets.DisplayScale = 0.72;
     Application = gtk_application_new("com.blocks.blocksui", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(Application, "activate", G_CALLBACK(BlocksUIGuiOnActivate),
                      &Widgets);

@@ -53,6 +53,7 @@ static void BlocksUIGuiOnTitleChanged(GtkEditable *Editable, gpointer UserData) 
     if (sBlocksUIGuiPropertyQuiet) {
         return;
     }
+    BlocksUIGuiPushUndo(Widgets);
     Text = gtk_editable_get_text(Editable);
     snprintf(Widgets->Document.Title, sizeof(Widgets->Document.Title), "%s",
              Text != 0 ? Text : "MyApp");
@@ -70,6 +71,7 @@ static void BlocksUIGuiOnIdChanged(GtkEditable *Editable, gpointer UserData) {
     if (Selected == 0) {
         return;
     }
+    BlocksUIGuiPushUndo(Widgets);
     Text = gtk_editable_get_text(Editable);
     snprintf(Selected->Id, sizeof(Selected->Id), "%s", Text != 0 ? Text : "id");
 }
@@ -86,6 +88,7 @@ static void BlocksUIGuiOnTextChanged(GtkEditable *Editable, gpointer UserData) {
     if (Selected == 0) {
         return;
     }
+    BlocksUIGuiPushUndo(Widgets);
     Text = gtk_editable_get_text(Editable);
     snprintf(Selected->Text, sizeof(Selected->Text), "%s", Text != 0 ? Text : "");
     BlocksUIGuiRefreshCanvas(Widgets);
@@ -103,6 +106,7 @@ static void BlocksUIGuiOnGeometryChanged(GtkSpinButton *Spin, gpointer UserData)
     if (Selected == 0) {
         return;
     }
+    BlocksUIGuiPushUndo(Widgets);
     Selected->X = gtk_spin_button_get_value_as_int(Widgets->XSpin);
     Selected->Y = gtk_spin_button_get_value_as_int(Widgets->YSpin);
     Selected->Width = gtk_spin_button_get_value_as_int(Widgets->WidthSpin);
